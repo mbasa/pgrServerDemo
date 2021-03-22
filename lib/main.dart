@@ -34,7 +34,10 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  TabController _tabController;
+
   MapController _mapController = MapController();
   LatLngBounds _mapBounds;
   List<Marker> _markers = [];
@@ -46,6 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, initialIndex: 0, vsync: this);
     _mapController.onReady.then((value) => getMapBounds());
   }
 
@@ -185,14 +189,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        toolbarHeight: 36.0,
+        toolbarHeight: 40.0,
         title: Text(widget.title),
       ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-            flex: 4,
+            flex: 3,
             child: Stack(
               children: [
                 FlutterMap(
@@ -267,7 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Padding(
               padding: EdgeInsets.all(4),
               child: Container(
-                padding: EdgeInsets.all(20.0),
+                padding: EdgeInsets.all(1.5),
                 //height: double.infinity,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black26, width: 1),
@@ -288,9 +292,52 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    Container(
+                      //decoration: new BoxDecoration(
+                      //    color: Theme.of(context).primaryColor),
+                      child: new TabBar(
+                        controller: _tabController,
+                        labelStyle: TextStyle(
+                          fontSize: 10.0,
+                        ),
+                        labelColor: Colors.black,
+                        unselectedLabelColor: Colors.black26,
+                        onTap: (val) => _removeMarkers(),
+                        tabs: [
+                          new Tab(
+                            icon: const Icon(
+                              Icons.home,
+                              size: 16.0,
+                            ),
+                            text: 'Shortest\n   Path',
+                          ),
+                          new Tab(
+                            icon: const Icon(
+                              Icons.drive_eta,
+                              size: 16.0,
+                            ),
+                            text: ' Driving\nDistance',
+                          ),
+                          new Tab(
+                            icon: const Icon(
+                              Icons.my_location,
+                              size: 16.0,
+                            ),
+                            text: '   VRP\nSearches',
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Container(),
+                    ),
                     ElevatedButton(
                       onPressed: () => _removeMarkers(),
                       child: Text("Clear Markers"),
+                    ),
+                    SizedBox(
+                      height: 10.0,
                     ),
                   ],
                 ),
