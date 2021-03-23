@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geojson_vi/geojson_vi.dart';
 import 'package:latlong/latlong.dart';
+import 'package:pgrserver_demo/utils/DialogUtil.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,6 +47,12 @@ class _MyHomePageState extends State<MyHomePage>
   LatLng _sourcePt;
   LatLng _targetPt;
 
+  final int _algolDIJKSTRA = 1;
+  final int _algolASTAR = 2;
+  final int _algolCHBD = 3;
+
+  int _selAlgol = 1;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +67,8 @@ class _MyHomePageState extends State<MyHomePage>
       _mapController.fitBounds(_mapBounds,
           options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
     } else {
+      DialogUtil.showOnSendDialog(context, "Getting Map Boundaries");
+
       try {
         debugPrint("requesting for map boundaries");
 
@@ -85,6 +94,8 @@ class _MyHomePageState extends State<MyHomePage>
       } catch (e) {
         debugPrint("Exception : $e");
       }
+
+      Navigator.pop(context);
     }
   }
 
@@ -106,6 +117,10 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<void> getRoute() async {
     Dio dio = Dio();
+    String url = "http://localhost:8080/pgrServer/api/latlng/";
+    String mUrl;
+
+    DialogUtil.showOnSendDialog(context, "Finding Shortest Path");
 
     try {
       Map<String, dynamic> options = {
@@ -115,11 +130,20 @@ class _MyHomePageState extends State<MyHomePage>
         "target_y": _targetPt.latitude,
       };
 
-      Response response = await dio.get(
-          "http://localhost:8080/pgrServer/api/latlng/chbDijkstra",
-          queryParameters: options);
+      if (_selAlgol == _algolDIJKSTRA) {
+        mUrl = "$url/dijkstra";
+      } else if (_selAlgol == _algolASTAR) {
+        mUrl = "$url/astar";
+      } else if (_selAlgol == _algolCHBD) {
+        mUrl = "$url/chbDijkstra";
+      }
+
+      Response response = await dio.get(mUrl, queryParameters: options);
 
       if (response.statusCode == 200) {
+        debugPrint(
+            "Line Properties: ${response.data["properties"].toString()}");
+
         JsonEncoder jsonEncoder = JsonEncoder();
 
         var lines = GeoJSONMultiLineString.fromJSON(
@@ -150,12 +174,13 @@ class _MyHomePageState extends State<MyHomePage>
       debugPrint("Get Route Exception: $exception");
       setState(() {});
     }
+
+    Navigator.pop(context);
   }
 
   void _removeMarkers() {
     _markers.clear();
     _polyLines.clear();
-    //_mapController.move(_mapController.center, _mapController.zoom);
     setState(() {});
   }
 
@@ -181,7 +206,6 @@ class _MyHomePageState extends State<MyHomePage>
     zoomIn ? zoom++ : zoom--;
 
     _mapController.move(_mapController.center, zoom);
-    debugPrint("Zoom: $zoom");
   }
 
   @override
@@ -282,23 +306,18 @@ class _MyHomePageState extends State<MyHomePage>
                       color: Colors.grey.withOpacity(0.5), //color of shadow
                       spreadRadius: 5, //spread radius
                       blurRadius: 7, // blur radius
-                      offset: Offset(0, 2), // changes position of shadow
-                      //first paramerter of offset is left-right
-                      //second parameter is top to down
+                      offset: Offset(0, 2),
                     ),
-                    //you can set more BoxShadow() here
                   ],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
-                      //decoration: new BoxDecoration(
-                      //    color: Theme.of(context).primaryColor),
                       child: new TabBar(
                         controller: _tabController,
                         labelStyle: TextStyle(
-                          fontSize: 10.0,
+                          fontSize: 8.5,
                         ),
                         labelColor: Colors.black,
                         unselectedLabelColor: Colors.black26,
@@ -330,7 +349,14 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                     Expanded(
                       flex: 2,
-                      child: Container(),
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          shortestPath(),
+                          Text("Driving Distance"),
+                          Text("VRP Search"),
+                        ],
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () => _removeMarkers(),
@@ -343,6 +369,61 @@ class _MyHomePageState extends State<MyHomePage>
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget shortestPath() {
+    return Container(
+      padding: EdgeInsets.only(top: 20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text("Shortest Path"),
+          SizedBox(
+            height: 20.0,
+          ),
+          Text(
+            "Choose Search Algorithm",
+            style: TextStyle(fontSize: 12),
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          RadioListTile(
+            title: Text("Dijkstra"),
+            subtitle: Text("Shortest Path Algorithm"),
+            value: _algolDIJKSTRA,
+            groupValue: _selAlgol,
+            onChanged: (val) {
+              _selAlgol = val;
+              setState(() {});
+            },
+            selected: _selAlgol == _algolDIJKSTRA,
+          ),
+          RadioListTile(
+            title: Text("A-Star"),
+            subtitle: Text("Shortest Path Algorithm"),
+            value: _algolASTAR,
+            groupValue: _selAlgol,
+            onChanged: (val) {
+              _selAlgol = val;
+              setState(() {});
+            },
+            selected: _selAlgol == _algolASTAR,
+          ),
+          RadioListTile(
+            title: Text("chbDijkstra"),
+            subtitle: Text("Shortest Path Algorithm"),
+            value: _algolCHBD,
+            groupValue: _selAlgol,
+            onChanged: (val) {
+              _selAlgol = val;
+              setState(() {});
+            },
+            selected: _selAlgol == _algolCHBD,
           ),
         ],
       ),
