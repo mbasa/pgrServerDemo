@@ -37,21 +37,26 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  TabController _tabController;
-
-  MapController _mapController = MapController();
-  LatLngBounds _mapBounds;
-  List<Marker> _markers = [];
-  List<Polyline> _polyLines = [];
-
-  LatLng _sourcePt;
-  LatLng _targetPt;
+  final String _url = "http://localhost:8080/pgrServer";
 
   final int _algolDIJKSTRA = 1;
   final int _algolASTAR = 2;
   final int _algolCHBD = 3;
 
   int _selAlgol = 1;
+  int _drivingDistance = 15000;
+  int _visibleTab = 0;
+
+  TabController _tabController;
+
+  MapController _mapController = MapController();
+  LatLngBounds _mapBounds;
+  List<Marker> _markers = [];
+  List<Polyline> _polyLines = [];
+  List<Polygon> _polygons = [];
+
+  LatLng _sourcePt;
+  LatLng _targetPt;
 
   @override
   void initState() {
@@ -72,8 +77,7 @@ class _MyHomePageState extends State<MyHomePage>
       try {
         debugPrint("requesting for map boundaries");
 
-        Response response =
-            await dio.get("http://127.0.0.1:8080/pgrServer/utils/graphBnd");
+        Response response = await dio.get("$_url/utils/graphBnd");
 
         if (response.statusCode == 200) {
           JsonEncoder jsonEncoder = JsonEncoder();
@@ -115,9 +119,63 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
+  Future<void> getDriveTimePoly() async {
+    if (_markers.isEmpty) return;
+
+    DialogUtil.showOnSendDialog(context, "Creating DriveTime Polygon");
+
+    try {
+      _polygons.clear();
+      Dio dio = Dio();
+
+      Map<String, dynamic> options = {
+        "source_x": _markers[0].point.longitude,
+        "source_y": _markers[0].point.latitude,
+        "radius": _drivingDistance,
+      };
+
+      debugPrint("Options: ${options.toString()}");
+
+      Response response = await dio.get("$_url/api/latlng/drivingDistance",
+          queryParameters: options);
+
+      if (response.statusCode == 200) {
+        JsonEncoder jsonEncoder = JsonEncoder();
+
+        var polys = GeoJSONPolygon.fromJSON(
+            jsonEncoder.convert(response.data["geometry"]));
+
+        if (polys != null) {
+          for (List<List<double>> mPolys in polys.coordinates) {
+            List<LatLng> coordinates = [];
+
+            for (List<double> mPoly in mPolys) {
+              coordinates.add(LatLng(mPoly[1], mPoly[0]));
+            }
+
+            _polygons.add(Polygon(
+                points: coordinates,
+                color: Colors.transparent,
+                borderColor: Colors.red,
+                borderStrokeWidth: 4.0));
+          }
+
+          _mapController.fitBounds(LatLngBounds(
+              LatLng(polys.bbox[1], polys.bbox[0]),
+              LatLng(polys.bbox[3], polys.bbox[2])));
+        }
+      }
+    } catch (e) {
+      debugPrint("DriveTimePolygon: ${e.toString()}");
+    }
+
+    Navigator.pop(context);
+    setState(() {});
+  }
+
   Future<void> getRoute() async {
     Dio dio = Dio();
-    String url = "http://localhost:8080/pgrServer/api/latlng/";
+    String url = "$_url/api/latlng/";
     String mUrl;
 
     DialogUtil.showOnSendDialog(context, "Finding Shortest Path");
@@ -181,27 +239,49 @@ class _MyHomePageState extends State<MyHomePage>
   void _removeMarkers() {
     _markers.clear();
     _polyLines.clear();
+    _polygons.clear();
     setState(() {});
   }
 
   void _mapMove(LatLng latLng) async {
-    if (_markers.length == 0) {
-      _addMarker(latLng, Colors.green[900]);
-      _sourcePt = latLng;
-      _mapController.move(_sourcePt, _mapController.zoom);
-    } else {
-      if (_markers.length > 1) {
-        _markers.removeLast();
-      }
-      _addMarker(latLng, Colors.red[900]);
-      _targetPt = latLng;
-      _polyLines.clear();
+    switch (_visibleTab) {
+      case 0: // Shortest Path Tab
+        if (_markers.length == 0) {
+          _addMarker(latLng, Colors.green[900]);
+          _sourcePt = latLng;
+          _mapController.move(_sourcePt, _mapController.zoom);
+        } else {
+          if (_markers.length > 1) {
+            _markers.removeLast();
+          }
+          _addMarker(latLng, Colors.red[900]);
+          _targetPt = latLng;
+          _polyLines.clear();
 
-      await getRoute();
+          await getRoute();
+        }
+        break;
+      case 1: //Driving Distance Tab
+        _markers.clear();
+        _polygons.clear();
+        _addMarker(latLng, Colors.green[900]);
+        _sourcePt = latLng;
+        _mapController.move(_sourcePt, _mapController.zoom);
+        break;
+      case 2:
+        if (_markers.length == 0) {
+          _addMarker(latLng, Colors.green[900]);
+          _sourcePt = latLng;
+        } else {
+          _addMarker(latLng, Colors.red[900]);
+          _targetPt = latLng;
+        }
+        _mapController.move(latLng, _mapController.zoom);
+        break;
     }
   }
 
-  void _incrementCounter(bool zoomIn) {
+  void _zoomMap(bool zoomIn) {
     double zoom = _mapController.zoom;
     zoomIn ? zoom++ : zoom--;
 
@@ -235,6 +315,9 @@ class _MyHomePageState extends State<MyHomePage>
                         urlTemplate:
                             "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                         subdomains: ['a', 'b', 'c']),
+                    PolygonLayerOptions(
+                      polygons: _polygons,
+                    ),
                     PolylineLayerOptions(
                       polylines: _polyLines,
                     ),
@@ -264,7 +347,7 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                         FloatingActionButton(
                           elevation: 32.0,
-                          onPressed: () => _incrementCounter(true),
+                          onPressed: () => _zoomMap(true),
                           tooltip: 'Zoom In',
                           child: Icon(
                             Icons.zoom_in_sharp,
@@ -276,7 +359,7 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                         FloatingActionButton(
                           elevation: 32.0,
-                          onPressed: () => _incrementCounter(false),
+                          onPressed: () => _zoomMap(false),
                           tooltip: 'Zoom Out',
                           child: Icon(
                             Icons.zoom_out_sharp,
@@ -321,7 +404,10 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                         labelColor: Colors.black,
                         unselectedLabelColor: Colors.black26,
-                        onTap: (val) => _removeMarkers(),
+                        onTap: (val) {
+                          _visibleTab = val;
+                          _removeMarkers();
+                        },
                         tabs: [
                           new Tab(
                             icon: const Icon(
@@ -353,7 +439,7 @@ class _MyHomePageState extends State<MyHomePage>
                         controller: _tabController,
                         children: [
                           shortestPath(),
-                          Text("Driving Distance"),
+                          drivingDistance(),
                           Text("VRP Search"),
                         ],
                       ),
@@ -370,6 +456,82 @@ class _MyHomePageState extends State<MyHomePage>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget drivingDistance() {
+    List<DropdownMenuItem<int>> distances = [
+      DropdownMenuItem(
+        child: Text("5 kilometers"),
+        value: 5000,
+      ),
+      DropdownMenuItem(
+        child: Text("10 kilometers"),
+        value: 10000,
+      ),
+      DropdownMenuItem(
+        child: Text("15 kilometers"),
+        value: 15000,
+      ),
+      DropdownMenuItem(
+        child: Text("20 kilometers"),
+        value: 20000,
+      ),
+      DropdownMenuItem(
+        child: Text("25 kilometers"),
+        value: 25000,
+      ),
+      DropdownMenuItem(
+        child: Text("30 kilometers"),
+        value: 30000,
+      ), /*
+      DropdownMenuItem(
+        child: Text("45 kilometers"),
+        value: 45000,
+      ),
+      DropdownMenuItem(
+        child: Text("50 kilometers"),
+        value: 50000,
+      ),*/
+    ];
+
+    return Container(
+      padding: EdgeInsets.only(top: 20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text("Driving Distance"),
+          SizedBox(
+            height: 50.0,
+          ),
+          Text(
+            "Choose Search Distance",
+            style: TextStyle(fontSize: 12),
+          ),
+          DropdownButton(
+            items: distances,
+            value: _drivingDistance,
+            style: TextStyle(fontSize: 13, color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: Theme.of(context).accentColor,
+            ),
+            onChanged: (val) => setState(() {
+              _drivingDistance = val;
+            }),
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(primary: Colors.deepOrange),
+            onPressed: () async {
+              await getDriveTimePoly();
+            },
+            child: Text("Search"),
+          )
         ],
       ),
     );
