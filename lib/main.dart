@@ -45,6 +45,9 @@ class _MyHomePageState extends State<MyHomePage>
   int _selAlgol = 1;
   int _drivingDistance = 15000;
   int _visibleTab = 0;
+  int _numVehicles = 1;
+  int _numPassengers = 1;
+  int _svcPassengers = 1;
 
   TabController _tabController;
 
@@ -110,6 +113,107 @@ class _MyHomePageState extends State<MyHomePage>
         ),
       ),
     );
+  }
+
+  Future<void> getVrp() async {
+    if (_markers.isEmpty || _markers.length < 3) return;
+
+    _polyLines.clear();
+
+    Map<String, dynamic> startLoc = {
+      "lat": _markers.first.point.latitude,
+      "lng": _markers.first.point.longitude,
+    };
+
+    List<Map<String, dynamic>> vehicles = [];
+
+    for (int i = 0; i < _numVehicles; i++) {
+      Map<String, dynamic> vehicle = {
+        "capacity": _numPassengers,
+        "startLocation": startLoc,
+        "weightIndex": 0,
+      };
+      vehicles.add(vehicle);
+    }
+
+    List<Map<String, dynamic>> services = [];
+
+    for (int j = 1; j < _markers.length; j++) {
+      Map<String, dynamic> location = {
+        "lat": _markers[j].point.latitude,
+        "lng": _markers[j].point.longitude,
+      };
+
+      Map<String, dynamic> service = {
+        "capacity": _svcPassengers,
+        "location": location,
+        "weightIndex": 0,
+      };
+
+      services.add(service);
+    }
+
+    DialogUtil.showOnSendDialog(context, "Creating DriveTime Polygon");
+    try {
+      Dio dio = new Dio();
+      Map<String, dynamic> data = {
+        "services": services,
+        "vehicles": vehicles,
+      };
+
+      Map<String, dynamic> vehicleColors = {
+        "vehicle1": Colors.red,
+        "vehicle2": Colors.blueAccent,
+        "vehicle3": Colors.green,
+        "vehicle4": Colors.deepPurple,
+      };
+
+      Response response =
+          await dio.post("$_url/vrp/generateServiceRoute", data: data);
+
+      if (response.statusCode == 200) {
+        GeoJSONFeatureCollection featureCollection =
+            GeoJSONFeatureCollection.fromMap(response.data);
+
+        for (GeoJSONFeature feature in featureCollection.features) {
+          //debugPrint("VRP: ${feature.properties["vehicle"]},"
+          //    "route${feature.properties["route"]}");
+
+          var geom = feature.geometry;
+          String vehicle = feature.properties["vehicle"];
+
+          if (geom is GeoJSONMultiLineString) {
+            for (List<List<double>> coords in geom.coordinates) {
+              List<LatLng> pLinePts = [];
+
+              for (List<double> coord in coords) {
+                LatLng latLng = LatLng(coord[1], coord[0]);
+                pLinePts.add(latLng);
+              }
+
+              var polyLine = Polyline(
+                  points: pLinePts,
+                  color: vehicleColors[vehicle],
+                  strokeWidth: 4.0);
+
+              _polyLines.add(polyLine);
+            }
+          }
+        }
+        if (featureCollection.bbox != null) {
+          _mapController.fitBounds(
+              LatLngBounds(
+                  LatLng(featureCollection.bbox[1], featureCollection.bbox[0]),
+                  LatLng(featureCollection.bbox[3], featureCollection.bbox[2])),
+              options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+        }
+      }
+    } catch (e) {
+      debugPrint("VRP: ${e.toString()}");
+    }
+
+    Navigator.pop(context);
+    setState(() {});
   }
 
   Future<void> getDriveTimePoly() async {
@@ -446,7 +550,7 @@ class _MyHomePageState extends State<MyHomePage>
                         children: [
                           shortestPath(),
                           drivingDistance(),
-                          Text("VRP Search"),
+                          vrp(),
                         ],
                       ),
                     ),
@@ -462,6 +566,150 @@ class _MyHomePageState extends State<MyHomePage>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget vrp() {
+    List<DropdownMenuItem<int>> numVehicles = [
+      DropdownMenuItem(
+        child: Text("1 Vehicle"),
+        value: 1,
+      ),
+      DropdownMenuItem(
+        child: Text("2 Vehicles"),
+        value: 2,
+      ),
+      DropdownMenuItem(
+        child: Text("3 Vehicles"),
+        value: 3,
+      ),
+      DropdownMenuItem(
+        child: Text("4 Vehicles"),
+        value: 4,
+      ),
+    ];
+
+    List<DropdownMenuItem<int>> numPassengers = [
+      DropdownMenuItem(
+        child: Text("1 Passenger"),
+        value: 1,
+      ),
+      DropdownMenuItem(
+        child: Text("2 Passengers"),
+        value: 2,
+      ),
+      DropdownMenuItem(
+        child: Text("3 Passengers"),
+        value: 3,
+      ),
+      DropdownMenuItem(
+        child: Text("4 Passengers"),
+        value: 4,
+      ),
+      DropdownMenuItem(
+        child: Text("5 Passengers"),
+        value: 5,
+      ),
+      DropdownMenuItem(
+        child: Text("6 Passengers"),
+        value: 6,
+      ),
+    ];
+
+    List<DropdownMenuItem<int>> svcPassengers = [
+      DropdownMenuItem(
+        child: Text("1 Passenger"),
+        value: 1,
+      ),
+      DropdownMenuItem(
+        child: Text("2 Passengers"),
+        value: 2,
+      ),
+      DropdownMenuItem(
+        child: Text("3 Passengers"),
+        value: 3,
+      ),
+      DropdownMenuItem(
+        child: Text("4 Passengers"),
+        value: 4,
+      ),
+    ];
+
+    return Container(
+      padding: EdgeInsets.only(top: 20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text("Vehicle Routing Problem"),
+          SizedBox(
+            height: 50.0,
+          ),
+          Text(
+            "Choose Number of Vehicles",
+            style: TextStyle(fontSize: 12),
+          ),
+          DropdownButton(
+            items: numVehicles,
+            value: _numVehicles,
+            style: TextStyle(fontSize: 13, color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: Theme.of(context).accentColor,
+            ),
+            onChanged: (val) => setState(() {
+              _numVehicles = val;
+            }),
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          Text(
+            "Passenger Capacity per Vehicle",
+            style: TextStyle(fontSize: 12),
+          ),
+          DropdownButton(
+            items: numPassengers,
+            value: _numPassengers,
+            style: TextStyle(fontSize: 13, color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: Theme.of(context).accentColor,
+            ),
+            onChanged: (val) => setState(() {
+              _numPassengers = val;
+            }),
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          Text(
+            "Passengers per Service Request",
+            style: TextStyle(fontSize: 12),
+          ),
+          DropdownButton(
+            items: svcPassengers,
+            value: _svcPassengers,
+            style: TextStyle(fontSize: 13, color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: Theme.of(context).accentColor,
+            ),
+            onChanged: (val) => setState(() {
+              _svcPassengers = val;
+            }),
+          ),
+          SizedBox(
+            height: 14.0,
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(primary: Colors.deepOrange),
+            onPressed: () async {
+              await getVrp();
+            },
+            child: Text("Search"),
+          )
         ],
       ),
     );
