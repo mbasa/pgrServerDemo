@@ -1,12 +1,11 @@
 // @dart=2.9
 
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geojson_vi/geojson_vi.dart';
 import 'package:latlong/latlong.dart';
+import 'package:pgrserver_demo/res/RestParams.dart';
 import 'package:pgrserver_demo/utils/DialogUtil.dart';
 
 void main() {
@@ -37,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  final String _url = "http://localhost:8080/pgrServer";
+  final String _url = RestParams.baseUrl;
 
   final int _algolDIJKSTRA = 1;
   final int _algolASTAR = 2;
@@ -80,13 +79,7 @@ class _MyHomePageState extends State<MyHomePage>
         Response response = await dio.get("$_url/utils/graphBnd");
 
         if (response.statusCode == 200) {
-          JsonEncoder jsonEncoder = JsonEncoder();
-
-          debugPrint("Status: ${response.statusCode},"
-              "Data: ${jsonEncoder.convert(response.data)}");
-
-          var poly =
-              GeoJSONPolygon.fromJSON(jsonEncoder.convert(response.data));
+          var poly = GeoJSONPolygon.fromMap(response.data);
           var polyBnd = poly.bbox;
 
           _mapBounds = LatLngBounds(
@@ -134,16 +127,11 @@ class _MyHomePageState extends State<MyHomePage>
         "radius": _drivingDistance,
       };
 
-      debugPrint("Options: ${options.toString()}");
-
       Response response = await dio.get("$_url/api/latlng/drivingDistance",
           queryParameters: options);
 
       if (response.statusCode == 200) {
-        JsonEncoder jsonEncoder = JsonEncoder();
-
-        var polys = GeoJSONPolygon.fromJSON(
-            jsonEncoder.convert(response.data["geometry"]));
+        var polys = GeoJSONPolygon.fromMap(response.data["geometry"]);
 
         if (polys != null) {
           for (List<List<double>> mPolys in polys.coordinates) {
@@ -199,19 +187,37 @@ class _MyHomePageState extends State<MyHomePage>
       Response response = await dio.get(mUrl, queryParameters: options);
 
       if (response.statusCode == 200) {
-        debugPrint(
-            "Line Properties: ${response.data["properties"].toString()}");
+        GeoJSON geoJson = GeoJSON.fromMap(response.data);
 
-        JsonEncoder jsonEncoder = JsonEncoder();
+        if (geoJson is GeoJSONFeature) {
+          debugPrint("GeometryType: ${geoJson.geometry.type.value} "
+              "Properties: ${geoJson.properties.toString()} ");
 
-        var lines = GeoJSONMultiLineString.fromJSON(
-            jsonEncoder.convert(response.data["geometry"]));
+          var geom = geoJson.geometry;
 
-        if (lines != null) {
-          for (List<List<double>> coords in lines.coordinates) {
+          if (geom is GeoJSONMultiLineString) {
+            for (List<List<double>> coords in geom.coordinates) {
+              List<LatLng> pLinePts = [];
+
+              for (List<double> coord in coords) {
+                LatLng latLng = LatLng(coord[1], coord[0]);
+                pLinePts.add(latLng);
+              }
+
+              var polyLine = Polyline(
+                  points: pLinePts, color: Colors.deepPurple, strokeWidth: 4.0);
+
+              _polyLines.add(polyLine);
+            }
+
+            _mapController.fitBounds(
+                LatLngBounds(LatLng(geom.bbox[1], geom.bbox[0]),
+                    LatLng(geom.bbox[3], geom.bbox[2])),
+                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+          } else if (geom is GeoJSONLineString) {
             List<LatLng> pLinePts = [];
 
-            for (List<double> coord in coords) {
+            for (List<double> coord in geom.coordinates) {
               LatLng latLng = LatLng(coord[1], coord[0]);
               pLinePts.add(latLng);
             }
@@ -220,12 +226,12 @@ class _MyHomePageState extends State<MyHomePage>
                 points: pLinePts, color: Colors.deepPurple, strokeWidth: 4.0);
 
             _polyLines.add(polyLine);
-          }
 
-          _mapController.fitBounds(
-              LatLngBounds(LatLng(lines.bbox[1], lines.bbox[0]),
-                  LatLng(lines.bbox[3], lines.bbox[2])),
-              options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+            _mapController.fitBounds(
+                LatLngBounds(LatLng(geom.bbox[1], geom.bbox[0]),
+                    LatLng(geom.bbox[3], geom.bbox[2])),
+                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+          }
         }
       }
     } catch (exception) {
