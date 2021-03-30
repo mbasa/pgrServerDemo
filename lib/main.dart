@@ -153,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage>
       services.add(service);
     }
 
-    DialogUtil.showOnSendDialog(context, "Creating DriveTime Polygon");
+    DialogUtil.showOnSendDialog(context, "Creating VRP Solution");
     try {
       Dio dio = new Dio();
       Map<String, dynamic> data = {
