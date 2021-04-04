@@ -294,9 +294,6 @@ class _MyHomePageState extends State<MyHomePage>
         GeoJSON geoJson = GeoJSON.fromMap(response.data);
 
         if (geoJson is GeoJSONFeature) {
-          debugPrint("GeometryType: ${geoJson.geometry.type.value} "
-              "Properties: ${geoJson.properties.toString()} ");
-
           var geom = geoJson.geometry;
 
           if (geom is GeoJSONMultiLineString) {
