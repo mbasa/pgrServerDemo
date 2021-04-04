@@ -10,6 +10,13 @@ A working pgrServer application service is a pre-requisite. Modify
 
 ``` lib/res/RestParams.dart```
 
-to point to the pgrServer if not  located on the default localhst.
+to point to the pgrServer if not  located on the default localhost.
+
+
+![Alt text](pics/img1.png?raw=true)
+![Alt text](pics/img2.png?raw=true)
+![Alt text](pics/img3.png?raw=true)
+![Alt text](pics/img4.png?raw=true)
+![Alt text](pics/img5.png?raw=true)
 
 
