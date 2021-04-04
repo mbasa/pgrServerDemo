@@ -1,16 +1,15 @@
 # pgrserver_demo
 
-A new Flutter project.
+A flutter application to view and test major services of the [pgrServer](https://github.com/mbasa/pgrServer)
+routing engine. This is used mainly for the MacOS desktop, although it will work as a Web 
+as well as a mobile application. 
 
-## Getting Started
+### Pre-requiste
 
-This project is a starting point for a Flutter application.
+A working pgrServer application service is a pre-requisite. Modify 
 
-A few resources to get you started if this is your first Flutter project:
+``` lib/res/RestParams.dart```
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+to point to the pgrServer if not  located on the default localhst.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
