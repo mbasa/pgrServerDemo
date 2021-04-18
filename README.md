@@ -12,11 +12,21 @@ A working pgrServer application service is a pre-requisite. Modify
 
 to point to the pgrServer if not  located on the default localhost.
 
+### Building the Application
+
+To build a `MacOS Desktop` application, run:
+
+```shell script
+flutter build macos --no-sound-null-safety
+``` 
+
+
 ### Sanple Screenshots
 
 * Shortest Path Searches
 ![Alt text](pics/img1.png?raw=true)
 ![Alt text](pics/img2.png?raw=true)
+![Alt text](pics/img2_1.png?raw=true)
 
 * Driving Distance
 ![Alt text](pics/img3.png?raw=true)
