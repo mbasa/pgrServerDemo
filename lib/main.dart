@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage>
   final int _algolCHBD = 3;
 
   int _selAlgol = 1;
-  int _drivingDistance = 15000;
+  int _drivingDistance = 5000;
   int _visibleTab = 0;
   int _numVehicles = 1;
   int _numPassengers = 1;
