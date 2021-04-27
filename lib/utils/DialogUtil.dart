@@ -30,6 +30,49 @@ class DialogUtil {
     );
   }
 
+  static Future<String> showTextInputDialog(BuildContext context, String title,
+      String initVal, String okBtnMsg, String cancelBtnMsg) async {
+    String retVal = "";
+    TextEditingController tController = TextEditingController(text: initVal);
+
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: TextField(
+            controller: tController,
+            onChanged: (val) => retVal = val,
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              child: Text(
+                cancelBtnMsg,
+                style: TextStyle(color: Color(0xff546e7a)),
+              ),
+              style: ElevatedButton.styleFrom(primary: Colors.white12),
+              onPressed: () => Navigator.of(context).pop(""),
+            ),
+            ElevatedButton(
+              child: Text(
+                okBtnMsg,
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(primary: Color(0xff00ac7d)),
+              onPressed: () => Navigator.of(context).pop(retVal),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   static Future<void> showCustomDialog(
       BuildContext context, String title, String msg, String btnMsg,
       {Color titleColor = Colors.red}) async {

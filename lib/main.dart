@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'pgrServer Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
@@ -36,11 +37,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  final String _url = RestParams.baseUrl;
-
   final int _algolDIJKSTRA = 1;
   final int _algolASTAR = 2;
   final int _algolCHBD = 3;
+
+  String _url = RestParams.baseUrl;
 
   int _selAlgol = 1;
   int _drivingDistance = 5000;
@@ -90,12 +91,15 @@ class _MyHomePageState extends State<MyHomePage>
 
           _mapController.fitBounds(_mapBounds,
               options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
+
+          Navigator.pop(context);
         }
       } catch (e) {
-        debugPrint("Exception : $e");
+        Navigator.pop(context);
+        DialogUtil.showCustomDialog(
+            context, "Error", "Ensure that pgrServer is reachable.", "Close",
+            titleColor: Colors.red);
       }
-
-      Navigator.pop(context);
     }
   }
 
@@ -402,6 +406,19 @@ class _MyHomePageState extends State<MyHomePage>
         centerTitle: true,
         toolbarHeight: 40.0,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () async {
+              String mUrl = await DialogUtil.showTextInputDialog(
+                  context, "Enter pgrServer URL", _url, "OK", "Cancel");
+              if (mUrl != null && mUrl.isNotEmpty) {
+                _url = mUrl;
+                _mapBounds = null;
+              }
+            },
+          ),
+        ],
       ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.center,
