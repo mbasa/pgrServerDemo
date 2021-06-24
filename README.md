@@ -12,13 +12,27 @@ A working pgrServer application service is a pre-requisite. Modify
 
 to point to the pgrServer if not  located on the default localhost.
 
-### Building the Application
+### Building as a Native Application
 
 To build a `MacOS Desktop` application, run:
 
 ```shell script
 flutter build macos --no-sound-null-safety
 ``` 
+
+### Building as a Web Application
+
+To build a `Web` application, run:
+
+```shell script
+flutter build web --release
+``` 
+
+then edit `web/index.html` and change the `base href` to an appropriate web app name
+
+```
+<base href="/pgrserver_demo/">
+```
 
 
 ### Sanple Screenshots
