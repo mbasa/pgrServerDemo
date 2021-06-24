@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage>
   String _url = RestParams.baseUrl;
 
   int _selAlgol = 1;
-  int _drivingDistance = 5000;
+  int _drivingDistance = 3000;
   int _visibleTab = 0;
   int _numVehicles = 1;
   int _numPassengers = 1;
@@ -251,7 +251,7 @@ class _MyHomePageState extends State<MyHomePage>
 
             _polygons.add(Polygon(
                 points: coordinates,
-                color: Colors.transparent,
+                color: Colors.redAccent.withOpacity(0.3), //Colors.transparent,
                 borderColor: Colors.red,
                 borderStrokeWidth: 4.0));
           }
@@ -732,6 +732,10 @@ class _MyHomePageState extends State<MyHomePage>
   Widget drivingDistance() {
     List<DropdownMenuItem<int>> distances = [
       DropdownMenuItem(
+        child: Text("3 kilometers"),
+        value: 3000,
+      ),
+      DropdownMenuItem(
         child: Text("5 kilometers"),
         value: 5000,
       ),
@@ -751,10 +755,11 @@ class _MyHomePageState extends State<MyHomePage>
         child: Text("25 kilometers"),
         value: 25000,
       ),
+      /*
       DropdownMenuItem(
         child: Text("30 kilometers"),
         value: 30000,
-      ), /*
+      ),
       DropdownMenuItem(
         child: Text("45 kilometers"),
         value: 45000,
