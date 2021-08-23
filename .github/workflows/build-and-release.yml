@@ -51,4 +51,4 @@ jobs:
           replacesArtifacts: true
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip'
+          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip,build/macos/Build/Products/macos-app.zip'
