@@ -34,7 +34,7 @@ jobs:
           cd Payload
           ln -s ../Runner.app
           cd ..
-          zip -r app.ipa Payload
+          zip -r ios-app.ipa Payload
       - name: Build Web App
         run: |
           flutter build web
@@ -51,4 +51,4 @@ jobs:
           replacesArtifacts: true
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip,build/macos/Build/Products/macos-app.zip'
+          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/ios-app.ipa,build/web/web-app.zip,build/macos/Build/Products/macos-app.zip'
