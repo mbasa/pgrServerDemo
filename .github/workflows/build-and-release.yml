@@ -41,5 +41,7 @@ jobs:
       - name: Release Apps
         uses: ncipollo/release-action@v1
         with:
+          replacesArtifacts: true
+          allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip'
