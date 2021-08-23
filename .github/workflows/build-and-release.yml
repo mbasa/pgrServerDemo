@@ -20,6 +20,8 @@ jobs:
         uses: subosito/flutter-action@v1
         with:
           channel: 'stable'
+      - name: Enable MacOS
+        run: flutter config --enable-macos-desktop
       - name: Install pub Dependencies
         run: flutter pub get
       - name: Build Android App
@@ -38,6 +40,11 @@ jobs:
           flutter build web
           cd build/web
           zip -r web-app.zip .
+      - name: Build MacOS App
+        run: |
+          flutter build macos --release
+          cd build/macos/Build/Products/
+          zip -r macos-app.zip Release
       - name: Release Apps
         uses: ncipollo/release-action@v1
         with:
