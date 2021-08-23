@@ -38,13 +38,8 @@ jobs:
           flutter build web
           cd build/web
           zip -r web-app.zip .
-      - name: Build MacOS App
-        run: |
-          flutter build macos
-          cd build/macos/Build/Products
-          zip -r macos-app.zip Release
       - name: Release Apps
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip,build/macos/Build/Products/macos-app.zip'
+          artifacts: 'build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa,build/web/web-app.zip'
