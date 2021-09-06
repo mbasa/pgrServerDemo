@@ -12,12 +12,26 @@ A working pgrServer application service is a pre-requisite. Modify
 
 to point to the pgrServer if not  located on the default localhost.
 
+### Getting the Application
+
+A MacOS binary, an Android apk, an unsigned IOS ipa, and a 
+web application package can all be downloaded fom the *Release* of
+this application. 
+
 ### Building as a Native Application
 
 To build a `MacOS Desktop` application, run:
 
 ```shell script
 flutter build macos --no-sound-null-safety
+``` 
+
+### Building as an Android Application
+
+To build an `Android` application, run:
+
+```shell script
+flutter build apk --release
 ``` 
 
 ### Building as a Web Application
