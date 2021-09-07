@@ -69722,7 +69722,7 @@ gmf:function(){return"\\"}}
 F.GI.prototype={
 P:function(a,b){return new S.wn(new F.wD("pgrServer Services",null),"pgrServer Demo",X.apz(null,C.y9),!1,null)}}
 F.wD.prototype={
-aB:function(){return new F.NS("http://cld06.georepublic.net/pgrServer/",new A.a_S(new P.aJ(new P.X($.P,t.wC),t.Fe),P.apo(t.mC)),H.b([],t.Pp),H.b([],t.sv),H.b([],t.RN),null,C.k)}}
+aB:function(){return new F.NS("https://cld06.georepublic.net/pgrServer/",new A.a_S(new P.aJ(new P.X($.P,t.wC),t.Fe),P.apo(t.mC)),H.b([],t.Pp),H.b([],t.sv),H.b([],t.RN),null,C.k)}}
 F.NS.prototype={
 aI:function(){var s=this
 s.bb()
@@ -70032,7 +70032,7 @@ o.XU(l,!1,p,l)
 p=m.fr
 n=new Y.xe(p,l,l)
 n.XV(l,!1,p,l)
-h=T.aiM(T.fp(C.at,H.b([new K.pu(H.b([new O.z0("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",256,0,18,0,s,C.xW,r,q,l,l),o,n,new O.wk(m.dy,l,l)],t.aP),h,m.db,l),new T.jj(C.nr,l,l,new T.dJ(new V.aC(22,22,22,22),T.a49(H.b([E.WW(L.vJ(C.rR,C.j,l),32,!1,new F.acp(m),"Zoom Bnd"),T.dx(l,l,15),E.WW(L.vJ(C.rP,C.j,l),32,!1,new F.acq(m),"Zoom In"),T.dx(l,l,15),E.WW(L.vJ(C.rQ,C.j,l),32,!1,new F.acr(m),"Zoom Out")],j),C.aQ,C.lf,C.b7),l),l)],j),C.ah,l,l),3)
+h=T.aiM(T.fp(C.at,H.b([new K.pu(H.b([new O.z0("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",256,0,18,0,s,C.xW,r,q,l,l),o,n,new O.wk(m.dy,l,l)],t.aP),h,m.db,l),new T.jj(C.nr,l,l,new T.dJ(new V.aC(22,22,22,22),T.a49(H.b([E.WW(L.vJ(C.rR,C.j,l),32,!1,new F.acp(m),"Zoom Bnd"),T.dx(l,l,15),E.WW(L.vJ(C.rP,C.j,l),32,!1,new F.acq(m),"Zoom In"),T.dx(l,l,15),E.WW(L.vJ(C.rQ,C.j,l),32,!1,new F.acr(m),"Zoom Out")],j),C.aQ,C.lf,C.b7),l),l)],j),C.ah,l,l),3)
 n=F.axn(C.jJ,1)
 o=K.Dj(8)
 q=H.b([new O.b6(5,P.ax(C.d.au(127.5),158,158,158),new P.m(0,2),7)],t.R)
