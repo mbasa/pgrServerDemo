@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geojson_vi/geojson_vi.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:pgrserver_demo/res/RestParams.dart';
 import 'package:pgrserver_demo/utils/DialogUtil.dart';
 
@@ -432,7 +432,7 @@ class _MyHomePageState extends State<MyHomePage>
                   options: MapOptions(
                     center: LatLng(51.5, -0.09),
                     zoom: 13.0,
-                    onTap: (xy) => _mapMove(xy),
+                    onTap: (tp, xy) => _mapMove(xy),
                   ),
                   layers: [
                     TileLayerOptions(
