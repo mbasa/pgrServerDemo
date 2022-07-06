@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geojson_vi/geojson_vi.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:pgrserver_demo/res/RestParams.dart';
 import 'package:pgrserver_demo/utils/DialogUtil.dart';
 
@@ -41,9 +41,10 @@ class _MyHomePageState extends State<MyHomePage>
   final int _algolASTAR = 2;
   final int _algolCHBD = 3;
 
+  final bool _useChb = true;
   String _url = RestParams.baseUrl;
 
-  int _selAlgol = 3;
+  int _selAlgol = 1;
   int _drivingDistance = 3000;
   int _visibleTab = 0;
   int _numVehicles = 1;
@@ -53,8 +54,6 @@ class _MyHomePageState extends State<MyHomePage>
   TabController _tabController;
 
   MapController _mapController = MapController();
-  MapOptions _mapOptions = MapOptions();
-
   LatLngBounds _mapBounds;
   List<Marker> _markers = [];
   List<Polyline> _polyLines = [];
@@ -67,26 +66,6 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, initialIndex: 0, vsync: this);
-
-    if (RestParams.defaultBnd.isNotEmpty) {
-      var poly = GeoJSONPolygon.fromJSON(RestParams.defaultBnd);
-      var polyBnd = poly.bbox;
-
-      _mapBounds = LatLngBounds(
-          LatLng(polyBnd[1], polyBnd[0]), LatLng(polyBnd[3], polyBnd[2]));
-
-      _mapOptions = MapOptions(
-        bounds: _mapBounds,
-        onTap: (xy) => _mapMove(xy),
-      );
-    } else {
-      _mapOptions = MapOptions(
-        center: LatLng(51.5, -0.09),
-        zoom: 13.0,
-        onTap: (xy) => _mapMove(xy),
-      );
-    }
-
     _mapController.onReady.then((value) => getMapBounds());
   }
 
@@ -271,11 +250,16 @@ class _MyHomePageState extends State<MyHomePage>
               coordinates.add(LatLng(mPoly[1], mPoly[0]));
             }
 
-            _polygons.add(Polygon(
+            _polygons.add(
+              Polygon(
                 points: coordinates,
-                color: Colors.redAccent.withOpacity(0.3), //Colors.transparent,
+                color: Colors.redAccent.withOpacity(0.2), //Colors.transparent,
                 borderColor: Colors.red,
-                borderStrokeWidth: 4.0));
+                borderStrokeWidth: 4.0,
+                isFilled: true,
+                isDotted: false,
+              ),
+            );
           }
 
           _mapController.fitBounds(LatLngBounds(
@@ -451,7 +435,11 @@ class _MyHomePageState extends State<MyHomePage>
               children: [
                 FlutterMap(
                   mapController: _mapController,
-                  options: _mapOptions,
+                  options: MapOptions(
+                    center: LatLng(51.5, -0.09),
+                    zoom: 13.0,
+                    onTap: (tp, xy) => _mapMove(xy),
+                  ),
                   layers: [
                     TileLayerOptions(
                         urlTemplate:
@@ -465,6 +453,7 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                     MarkerLayerOptions(
                       markers: _markers,
+                      usePxCache: false,
                     ),
                   ],
                 ),
@@ -769,12 +758,11 @@ class _MyHomePageState extends State<MyHomePage>
         child: Text("20 kilometers"),
         value: 20000,
       ),
-      /*
       DropdownMenuItem(
         child: Text("25 kilometers"),
         value: 25000,
       ),
-
+      /*
       DropdownMenuItem(
         child: Text("30 kilometers"),
         value: 30000,
@@ -873,10 +861,12 @@ class _MyHomePageState extends State<MyHomePage>
             subtitle: Text("Shortest Path Algorithm"),
             value: _algolCHBD,
             groupValue: _selAlgol,
-            onChanged: (val) {
-              _selAlgol = val;
-              setState(() {});
-            },
+            onChanged: !_useChb
+                ? null
+                : (val) {
+                    _selAlgol = val;
+                    setState(() {});
+                  },
             selected: _selAlgol == _algolCHBD,
           ),
         ],
