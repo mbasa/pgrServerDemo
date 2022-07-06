@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geojson_vi/geojson_vi.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong/latlong.dart';
 import 'package:pgrserver_demo/res/RestParams.dart';
 import 'package:pgrserver_demo/utils/DialogUtil.dart';
 
@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   String _url = RestParams.baseUrl;
 
-  int _selAlgol = 1;
+  int _selAlgol = 3;
   int _drivingDistance = 3000;
   int _visibleTab = 0;
   int _numVehicles = 1;
@@ -53,6 +53,8 @@ class _MyHomePageState extends State<MyHomePage>
   TabController _tabController;
 
   MapController _mapController = MapController();
+  MapOptions _mapOptions = MapOptions();
+
   LatLngBounds _mapBounds;
   List<Marker> _markers = [];
   List<Polyline> _polyLines = [];
@@ -65,6 +67,26 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, initialIndex: 0, vsync: this);
+
+    if (RestParams.defaultBnd.isNotEmpty) {
+      var poly = GeoJSONPolygon.fromJSON(RestParams.defaultBnd);
+      var polyBnd = poly.bbox;
+
+      _mapBounds = LatLngBounds(
+          LatLng(polyBnd[1], polyBnd[0]), LatLng(polyBnd[3], polyBnd[2]));
+
+      _mapOptions = MapOptions(
+        bounds: _mapBounds,
+        onTap: (xy) => _mapMove(xy),
+      );
+    } else {
+      _mapOptions = MapOptions(
+        center: LatLng(51.5, -0.09),
+        zoom: 13.0,
+        onTap: (xy) => _mapMove(xy),
+      );
+    }
+
     _mapController.onReady.then((value) => getMapBounds());
   }
 
@@ -429,11 +451,7 @@ class _MyHomePageState extends State<MyHomePage>
               children: [
                 FlutterMap(
                   mapController: _mapController,
-                  options: MapOptions(
-                    center: LatLng(51.5, -0.09),
-                    zoom: 13.0,
-                    onTap: (tp, xy) => _mapMove(xy),
-                  ),
+                  options: _mapOptions,
                   layers: [
                     TileLayerOptions(
                         urlTemplate:
@@ -670,7 +688,7 @@ class _MyHomePageState extends State<MyHomePage>
             style: TextStyle(fontSize: 13, color: Colors.black),
             underline: Container(
               height: 2,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
               _numVehicles = val;
@@ -689,7 +707,7 @@ class _MyHomePageState extends State<MyHomePage>
             style: TextStyle(fontSize: 13, color: Colors.black),
             underline: Container(
               height: 2,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
               _numPassengers = val;
@@ -708,7 +726,7 @@ class _MyHomePageState extends State<MyHomePage>
             style: TextStyle(fontSize: 13, color: Colors.black),
             underline: Container(
               height: 2,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
               _svcPassengers = val;
@@ -751,11 +769,12 @@ class _MyHomePageState extends State<MyHomePage>
         child: Text("20 kilometers"),
         value: 20000,
       ),
+      /*
       DropdownMenuItem(
         child: Text("25 kilometers"),
         value: 25000,
       ),
-      /*
+
       DropdownMenuItem(
         child: Text("30 kilometers"),
         value: 30000,
@@ -789,7 +808,7 @@ class _MyHomePageState extends State<MyHomePage>
             style: TextStyle(fontSize: 13, color: Colors.black),
             underline: Container(
               height: 2,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
               _drivingDistance = val;

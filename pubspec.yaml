@@ -23,11 +23,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  #flutter_map: ^0.11.0
-  flutter_map:
-      git:
-        url: https://github.com/ibrierley/flutter_map
-        ref: markerlayer_crash_fix
+  flutter_map: ^0.12.0
+  #flutter_map:
+  #  git:
+  #    url: https://github.com/ibrierley/flutter_map
+  #    branch: markerlayer_crash_fix
+
   geojson_vi: ^2.0.2
   dio: ^4.0.4
 
