@@ -56,7 +56,7 @@ class DialogUtil {
                 cancelBtnMsg,
                 style: TextStyle(color: Color(0xff546e7a)),
               ),
-              style: ElevatedButton.styleFrom(primary: Colors.white12),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white12),
               onPressed: () => Navigator.of(context).pop(""),
             ),
             ElevatedButton(
@@ -64,7 +64,8 @@ class DialogUtil {
                 okBtnMsg,
                 style: TextStyle(color: Colors.white),
               ),
-              style: ElevatedButton.styleFrom(primary: Color(0xff00ac7d)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xff00ac7d)),
               onPressed: () => Navigator.of(context).pop(retVal),
             ),
           ],
@@ -95,7 +96,8 @@ class DialogUtil {
                 btnMsg,
                 style: TextStyle(color: Colors.white),
               ),
-              style: ElevatedButton.styleFrom(primary: Color(0xff00ac7d)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xff00ac7d)),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -126,7 +128,9 @@ class DialogUtil {
                 cancelBtnMsg,
                 style: TextStyle(color: Color(0xff546e7a)),
               ),
-              style: ElevatedButton.styleFrom(primary: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+              ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             ElevatedButton(
@@ -134,7 +138,8 @@ class DialogUtil {
                 okBtnMsg,
                 style: TextStyle(color: Colors.white),
               ),
-              style: ElevatedButton.styleFrom(primary: Color(0xff00ac7d)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xff00ac7d)),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],

@@ -1,5 +1,3 @@
-// @dart=2.9
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -28,7 +26,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title = ""}) : super(key: key);
   final String title;
 
   @override
@@ -51,30 +49,34 @@ class _MyHomePageState extends State<MyHomePage>
   int _numPassengers = 1;
   int _svcPassengers = 1;
 
-  TabController _tabController;
+  TabController? _tabController;
 
   MapController _mapController = MapController();
-  LatLngBounds _mapBounds;
+  LatLngBounds? _mapBounds; //= LatLngBounds();
   List<Marker> _markers = [];
   List<Polyline> _polyLines = [];
   List<Polygon> _polygons = [];
 
-  LatLng _sourcePt;
-  LatLng _targetPt;
+  LatLng _sourcePt = LatLng(0.0, 0.0);
+  LatLng _targetPt = LatLng(0.0, 0.0);
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, initialIndex: 0, vsync: this);
-    _mapController.onReady.then((value) => getMapBounds());
+    //_mapController.  .then((value) => getMapBounds());
   }
 
   void getMapBounds() async {
     Dio dio = Dio();
 
     if (_mapBounds != null) {
-      _mapController.fitBounds(_mapBounds,
-          options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
+      _mapController.fitCamera(CameraFit.bounds(
+        bounds: _mapBounds!,
+        padding: EdgeInsets.all(3.0),
+      ));
+      //_mapController.fitBounds(_mapBounds!,
+      //    options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
     } else {
       DialogUtil.showOnSendDialog(context, "Getting Map Boundaries");
 
@@ -90,8 +92,12 @@ class _MyHomePageState extends State<MyHomePage>
           _mapBounds = LatLngBounds(
               LatLng(polyBnd[1], polyBnd[0]), LatLng(polyBnd[3], polyBnd[2]));
 
-          _mapController.fitBounds(_mapBounds,
-              options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
+          _mapController.fitCamera(CameraFit.bounds(
+            bounds: _mapBounds!,
+            padding: EdgeInsets.all(3.0),
+          ));
+          //_mapController.fitBounds(_mapBounds!,
+          //    options: FitBoundsOptions(padding: EdgeInsets.all(3.0)));
 
           Navigator.pop(context);
         }
@@ -104,18 +110,25 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
-  void _addMarker(LatLng latLng, Color color) {
+  void _addMarker(LatLng latLng, Color? color) {
     _markers.add(
       Marker(
         point: latLng,
-        anchorPos: AnchorPos.align(AnchorAlign.top),
-        builder: (ctx) => Container(
+        child: Container(
           child: Icon(
             Icons.location_on_rounded,
             color: color,
             size: 40.0,
           ),
         ),
+        /*anchorPos: AnchorPos.align(AnchorAlign.top),
+        builder: (ctx) => Container(
+          child: Icon(
+            Icons.location_on_rounded,
+            color: color,
+            size: 40.0,
+          ),
+        ),*/
       ),
     );
   }
@@ -180,37 +193,48 @@ class _MyHomePageState extends State<MyHomePage>
         GeoJSONFeatureCollection featureCollection =
             GeoJSONFeatureCollection.fromMap(response.data);
 
-        for (GeoJSONFeature feature in featureCollection.features) {
-          //debugPrint("VRP: ${feature.properties["vehicle"]},"
-          //    "route${feature.properties["route"]}");
+        if (featureCollection.features.isNotEmpty) {
+          for (GeoJSONFeature? feature in featureCollection.features) {
+            //debugPrint("VRP: ${feature.properties["vehicle"]},"
+            //    "route${feature.properties["route"]}");
 
-          var geom = feature.geometry;
-          String vehicle = feature.properties["vehicle"];
+            var geom = feature?.geometry;
+            String vehicle = feature?.properties?["vehicle"] ??= "";
 
-          if (geom is GeoJSONMultiLineString) {
-            for (List<List<double>> coords in geom.coordinates) {
-              List<LatLng> pLinePts = [];
+            if (geom is GeoJSONMultiLineString) {
+              for (List<List<double>> coords in geom.coordinates) {
+                List<LatLng> pLinePts = [];
 
-              for (List<double> coord in coords) {
-                LatLng latLng = LatLng(coord[1], coord[0]);
-                pLinePts.add(latLng);
+                for (List<double> coord in coords) {
+                  LatLng latLng = LatLng(coord[1], coord[0]);
+                  pLinePts.add(latLng);
+                }
+
+                var polyLine = Polyline(
+                    points: pLinePts,
+                    color: vehicleColors[vehicle],
+                    strokeWidth: 4.0);
+
+                _polyLines.add(polyLine);
               }
-
-              var polyLine = Polyline(
-                  points: pLinePts,
-                  color: vehicleColors[vehicle],
-                  strokeWidth: 4.0);
-
-              _polyLines.add(polyLine);
             }
           }
         }
         if (featureCollection.bbox != null) {
-          _mapController.fitBounds(
+          _mapController.fitCamera(CameraFit.bounds(
+              bounds: LatLngBounds(
+                  LatLng(
+                      featureCollection.bbox![1], featureCollection.bbox![0]),
+                  LatLng(
+                      featureCollection.bbox![3], featureCollection.bbox![2])),
+              padding: EdgeInsets.all(33.0)));
+          /*_mapController.fitBounds(
               LatLngBounds(
-                  LatLng(featureCollection.bbox[1], featureCollection.bbox[0]),
-                  LatLng(featureCollection.bbox[3], featureCollection.bbox[2])),
-              options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+                  LatLng(
+                      featureCollection.bbox![1], featureCollection.bbox![0]),
+                  LatLng(
+                      featureCollection.bbox![3], featureCollection.bbox![2])),
+              options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));*/
         }
       }
     } catch (e) {
@@ -242,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage>
       if (response.statusCode == 200) {
         var polys = GeoJSONPolygon.fromMap(response.data["geometry"]);
 
-        if (polys != null) {
+        if (polys.coordinates.isNotEmpty) {
           for (List<List<double>> mPolys in polys.coordinates) {
             List<LatLng> coordinates = [];
 
@@ -262,9 +286,17 @@ class _MyHomePageState extends State<MyHomePage>
             );
           }
 
-          _mapController.fitBounds(LatLngBounds(
+          _mapController.fitCamera(
+            CameraFit.bounds(
+              bounds: LatLngBounds(
+                LatLng(polys.bbox[1], polys.bbox[0]),
+                LatLng(polys.bbox[3], polys.bbox[2]),
+              ),
+            ),
+          );
+          /*_mapController.fitBounds(LatLngBounds(
               LatLng(polys.bbox[1], polys.bbox[0]),
-              LatLng(polys.bbox[3], polys.bbox[2])));
+              LatLng(polys.bbox[3], polys.bbox[2]))); */
         }
       }
     } catch (e) {
@@ -278,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage>
   Future<void> getRoute() async {
     Dio dio = Dio();
     String url = "$_url/api/latlng/";
-    String mUrl;
+    String mUrl = "";
 
     DialogUtil.showOnSendDialog(context, "Finding Shortest Path");
 
@@ -321,10 +353,19 @@ class _MyHomePageState extends State<MyHomePage>
               _polyLines.add(polyLine);
             }
 
-            _mapController.fitBounds(
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: LatLngBounds(
+                  LatLng(geom.bbox[1], geom.bbox[0]),
+                  LatLng(geom.bbox[3], geom.bbox[2]),
+                ),
+                padding: EdgeInsets.all(33.0),
+              ),
+            );
+            /* _mapController.fitBounds(
                 LatLngBounds(LatLng(geom.bbox[1], geom.bbox[0]),
                     LatLng(geom.bbox[3], geom.bbox[2])),
-                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));*/
           } else if (geom is GeoJSONLineString) {
             List<LatLng> pLinePts = [];
 
@@ -338,10 +379,19 @@ class _MyHomePageState extends State<MyHomePage>
 
             _polyLines.add(polyLine);
 
-            _mapController.fitBounds(
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: LatLngBounds(
+                  LatLng(geom.bbox[1], geom.bbox[0]),
+                  LatLng(geom.bbox[3], geom.bbox[2]),
+                ),
+                padding: EdgeInsets.all(33.0),
+              ),
+            );
+            /*_mapController.fitBounds(
                 LatLngBounds(LatLng(geom.bbox[1], geom.bbox[0]),
                     LatLng(geom.bbox[3], geom.bbox[2])),
-                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));
+                options: FitBoundsOptions(padding: EdgeInsets.all(33.0)));}*/
           }
         }
       }
@@ -366,7 +416,7 @@ class _MyHomePageState extends State<MyHomePage>
         if (_markers.length == 0) {
           _addMarker(latLng, Colors.green[900]);
           _sourcePt = latLng;
-          _mapController.move(_sourcePt, _mapController.zoom);
+          _mapController.move(_sourcePt, _mapController.camera.zoom);
         } else {
           if (_markers.length > 1) {
             _markers.removeLast();
@@ -383,7 +433,7 @@ class _MyHomePageState extends State<MyHomePage>
         _polygons.clear();
         _addMarker(latLng, Colors.green[900]);
         _sourcePt = latLng;
-        _mapController.move(_sourcePt, _mapController.zoom);
+        _mapController.move(_sourcePt, _mapController.camera.zoom);
         break;
       case 2:
         if (_markers.length == 0) {
@@ -393,16 +443,16 @@ class _MyHomePageState extends State<MyHomePage>
           _addMarker(latLng, Colors.red[900]);
           _targetPt = latLng;
         }
-        _mapController.move(latLng, _mapController.zoom);
+        _mapController.move(latLng, _mapController.camera.zoom);
         break;
     }
   }
 
   void _zoomMap(bool zoomIn) {
-    double zoom = _mapController.zoom;
+    double zoom = _mapController.camera.zoom;
     zoomIn ? zoom++ : zoom--;
 
-    _mapController.move(_mapController.center, zoom);
+    _mapController.move(_mapController.camera.center, zoom);
   }
 
   @override
@@ -412,15 +462,17 @@ class _MyHomePageState extends State<MyHomePage>
         centerTitle: true,
         toolbarHeight: 40.0,
         title: Text(widget.title),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () async {
               String mUrl = await DialogUtil.showTextInputDialog(
                   context, "Enter pgrServer URL", _url, "OK", "Cancel");
-              if (mUrl != null && mUrl.isNotEmpty) {
+              if (mUrl.isNotEmpty) {
                 _url = mUrl;
-                _mapBounds = null;
+                _mapBounds = LatLngBounds(LatLng(90, -180), LatLng(-90, 180));
               }
             },
           ),
@@ -436,24 +488,25 @@ class _MyHomePageState extends State<MyHomePage>
                 FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    center: LatLng(51.5, -0.09),
-                    zoom: 13.0,
+                    initialCenter: LatLng(51.5, -0.09),
+                    initialZoom: 13.0,
+                    onMapReady: () => getMapBounds(),
                     onTap: (tp, xy) => _mapMove(xy),
                   ),
-                  layers: [
-                    TileLayerOptions(
-                        urlTemplate:
-                            "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                        subdomains: ['a', 'b', 'c']),
-                    PolygonLayerOptions(
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    ),
+                    PolygonLayer(
                       polygons: _polygons,
                     ),
-                    PolylineLayerOptions(
+                    PolylineLayer(
                       polylines: _polyLines,
                     ),
-                    MarkerLayerOptions(
+                    MarkerLayer(
                       markers: _markers,
-                      usePxCache: false,
+                      //usePxCache: false,
                     ),
                   ],
                 ),
@@ -468,6 +521,7 @@ class _MyHomePageState extends State<MyHomePage>
                           elevation: 32.0,
                           onPressed: () => getMapBounds(),
                           tooltip: 'Zoom Bnd',
+                          backgroundColor: Colors.teal,
                           child: Icon(
                             Icons.zoom_out_map_outlined,
                             color: Colors.white,
@@ -480,6 +534,7 @@ class _MyHomePageState extends State<MyHomePage>
                           elevation: 32.0,
                           onPressed: () => _zoomMap(true),
                           tooltip: 'Zoom In',
+                          backgroundColor: Colors.teal,
                           child: Icon(
                             Icons.zoom_in_sharp,
                             color: Colors.white,
@@ -492,6 +547,7 @@ class _MyHomePageState extends State<MyHomePage>
                           elevation: 32.0,
                           onPressed: () => _zoomMap(false),
                           tooltip: 'Zoom Out',
+                          backgroundColor: Colors.teal,
                           child: Icon(
                             Icons.zoom_out_sharp,
                             color: Colors.white,
@@ -576,6 +632,10 @@ class _MyHomePageState extends State<MyHomePage>
                       ),
                     ),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => _removeMarkers(),
                       child: Text("Clear Markers"),
                     ),
@@ -680,7 +740,7 @@ class _MyHomePageState extends State<MyHomePage>
               color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
-              _numVehicles = val;
+              _numVehicles = int.parse(val.toString());
             }),
           ),
           SizedBox(
@@ -699,7 +759,7 @@ class _MyHomePageState extends State<MyHomePage>
               color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
-              _numPassengers = val;
+              _numPassengers = int.parse(val.toString());
             }),
           ),
           SizedBox(
@@ -718,14 +778,17 @@ class _MyHomePageState extends State<MyHomePage>
               color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
-              _svcPassengers = val;
+              _svcPassengers = int.parse(val.toString());
             }),
           ),
           SizedBox(
             height: 14.0,
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(primary: Colors.deepOrange),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               await getVrp();
             },
@@ -799,14 +862,17 @@ class _MyHomePageState extends State<MyHomePage>
               color: Theme.of(context).colorScheme.secondary,
             ),
             onChanged: (val) => setState(() {
-              _drivingDistance = val;
+              _drivingDistance = int.parse(val.toString());
             }),
           ),
           SizedBox(
             height: 8.0,
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(primary: Colors.deepOrange),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               await getDriveTimePoly();
             },
@@ -840,7 +906,7 @@ class _MyHomePageState extends State<MyHomePage>
             value: _algolDIJKSTRA,
             groupValue: _selAlgol,
             onChanged: (val) {
-              _selAlgol = val;
+              _selAlgol = int.parse(val.toString());
               setState(() {});
             },
             selected: _selAlgol == _algolDIJKSTRA,
@@ -851,7 +917,7 @@ class _MyHomePageState extends State<MyHomePage>
             value: _algolASTAR,
             groupValue: _selAlgol,
             onChanged: (val) {
-              _selAlgol = val;
+              _selAlgol = int.parse(val.toString());
               setState(() {});
             },
             selected: _selAlgol == _algolASTAR,
@@ -864,7 +930,7 @@ class _MyHomePageState extends State<MyHomePage>
             onChanged: !_useChb
                 ? null
                 : (val) {
-                    _selAlgol = val;
+                    _selAlgol = int.parse(val.toString());
                     setState(() {});
                   },
             selected: _selAlgol == _algolCHBD,
