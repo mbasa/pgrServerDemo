@@ -217,6 +217,20 @@ class _MyHomePageState extends State<MyHomePage>
 
                 _polyLines.add(polyLine);
               }
+            } else if (geom is GeoJSONLineString) {
+              List<LatLng> pLinePts = [];
+
+              for (List<double> coord in geom.coordinates) {
+                LatLng latLng = LatLng(coord[1], coord[0]);
+                pLinePts.add(latLng);
+              }
+
+              var polyLine = Polyline(
+                  points: pLinePts,
+                  color: vehicleColors[vehicle],
+                  strokeWidth: 4.0);
+
+              _polyLines.add(polyLine);
             }
           }
         }
