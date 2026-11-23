@@ -1,0 +1,7 @@
+# Apache: serve Flutter WebAssembly build files with the correct MIME types.
+# Without these, Apache matches the ".dart" in "main.dart.mjs" and
+# "main.dart.wasm" and sends "application/vnd.dart", which browsers reject.
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
+  AddType application/wasm .wasm
+</IfModule>
