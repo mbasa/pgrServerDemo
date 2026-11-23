@@ -23,7 +23,7 @@ this application.
 To build a `MacOS Desktop` application, run:
 
 ```shell script
-flutter build macos --no-sound-null-safety
+flutter build macos --release
 ``` 
 
 ### Building as an Android Application
