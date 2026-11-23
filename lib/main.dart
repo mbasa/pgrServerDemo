@@ -5,6 +5,7 @@ import 'package:geojson_vi/geojson_vi.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:pgrserver_demo/res/RestParams.dart';
 import 'package:pgrserver_demo/utils/DialogUtil.dart';
+import 'package:pgrserver_demo/utils/PlatformInfo.dart';
 
 void main() {
   runApp(MyApp());
@@ -483,9 +484,13 @@ class _MyHomePageState extends State<MyHomePage>
             icon: Icon(Icons.settings),
             onPressed: () async {
               String mUrl = await DialogUtil.showTextInputDialog(
-                  context, "Enter pgrServer URL", _url, "OK", "Cancel");
+                  context, "Enter pgrServer URL", _url, "OK", "Cancel",
+                  caption: PlatformInfo.webRuntimeLabel == null
+                      ? null
+                      : "Web runtime: ${PlatformInfo.webRuntimeLabel}");
               if (mUrl.isNotEmpty) {
-                _url = mUrl;
+                // Endpoints are appended as "$_url/...", so drop trailing slashes.
+                _url = mUrl.replaceAll(RegExp(r'/+$'), '');
                 _mapBounds = LatLngBounds(LatLng(90, -180), LatLng(-90, 180));
               }
             },
@@ -510,7 +515,7 @@ class _MyHomePageState extends State<MyHomePage>
                   children: [
                     TileLayer(
                       urlTemplate:
-                          "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                     ),
                     PolygonLayer(
                       polygons: _polygons,

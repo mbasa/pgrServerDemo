@@ -31,8 +31,8 @@ class DialogUtil {
   }
 
   static Future<String> showTextInputDialog(BuildContext context, String title,
-      String initVal, String okBtnMsg, String cancelBtnMsg) async {
-    String retVal = "";
+      String initVal, String okBtnMsg, String cancelBtnMsg,
+      {String? caption}) async {
     TextEditingController tController = TextEditingController(text: initVal);
 
     return await showDialog(
@@ -46,9 +46,21 @@ class DialogUtil {
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: TextField(
-            controller: tController,
-            onChanged: (val) => retVal = val,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TextField(
+                controller: tController,
+              ),
+              if (caption != null) ...[
+                SizedBox(height: 12.0),
+                Text(
+                  caption,
+                  style: TextStyle(fontSize: 12.0, color: Color(0xff546e7a)),
+                ),
+              ],
+            ],
           ),
           actions: <Widget>[
             ElevatedButton(
@@ -66,7 +78,7 @@ class DialogUtil {
               ),
               style:
                   ElevatedButton.styleFrom(backgroundColor: Color(0xff00ac7d)),
-              onPressed: () => Navigator.of(context).pop(retVal),
+              onPressed: () => Navigator.of(context).pop(tController.text.trim()),
             ),
           ],
         );
